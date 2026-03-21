@@ -24,11 +24,11 @@ public class UserService {
         return users;
     }
 
-    public User getUserById(String id) {
+    public User getUserById(String id) throws UserNotFoundException {
         return users.stream()
                 .filter(u -> u.getId().equals(id))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con id: " + id));
     }
 
     public void updateUser(String id, User updatedUser) throws UserNotFoundException {

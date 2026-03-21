@@ -3,6 +3,7 @@ package edu.eci.dosw.DOSW_Library.core.service;
 
 import edu.eci.dosw.DOSW_Library.core.exception.BookNotAvailableException;
 import edu.eci.dosw.DOSW_Library.core.exception.BookNotFoundException;
+import edu.eci.dosw.DOSW_Library.core.exception.UserNotFoundException;
 import edu.eci.dosw.DOSW_Library.core.model.Book;
 import edu.eci.dosw.DOSW_Library.core.model.Loan;
 import edu.eci.dosw.DOSW_Library.core.model.Status;
@@ -27,13 +28,14 @@ public class LoanService {
         this.userService = userService;
     }
 
-    public Loan createLoan(String bookId, String userId) throws BookNotAvailableException {
+    public Loan createLoan(String bookId, String userId)
+            throws BookNotAvailableException, UserNotFoundException {
 
         Book book = bookService.getBookById(bookId);
         User user = userService.getUserById(userId);
 
         if (!bookService.isAvailable(bookId)) {
-            throw new BookNotAvailableException("Book is not available");
+            throw new BookNotAvailableException("El libro no está disponible: " + bookId);
         }
 
         bookService.decreaseStock(bookId);
@@ -50,6 +52,7 @@ public class LoanService {
         loans.add(loan);
         return loan;
     }
+
 
     public Loan returnBook(String loanId) {
 

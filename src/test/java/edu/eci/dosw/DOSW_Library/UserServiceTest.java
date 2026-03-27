@@ -3,8 +3,10 @@ package edu.eci.dosw.DOSW_Library;
 import edu.eci.dosw.DOSW_Library.core.exception.UserNotFoundException;
 import edu.eci.dosw.DOSW_Library.core.model.User;
 import edu.eci.dosw.DOSW_Library.core.service.UserService;
+import edu.eci.dosw.DOSW_Library.persistence.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,7 +16,8 @@ public class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserService();
+        UserRepository userRepository = Mockito.mock(UserRepository.class);
+        UserService userService = new UserService(userRepository);
     }
 
     @Test

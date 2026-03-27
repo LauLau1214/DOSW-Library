@@ -2,23 +2,39 @@ package edu.eci.dosw.DOSW_Library;
 
 import edu.eci.dosw.DOSW_Library.core.model.Book;
 import edu.eci.dosw.DOSW_Library.core.service.BookService;
+import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
+import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BookServiceTest {
 
     private BookService bookService;
+    private BookRepository bookRepository;
 
     @BeforeEach
     void setUp() {
-        bookService = new BookService();
+        bookRepository = Mockito.mock(BookRepository.class);
+        bookService = new BookService(bookRepository);
     }
 
     @Test
     void shouldAddBook() {
         Book book = new Book("Libro", "Autor", "1", true);
+
+        Mockito.when(bookRepository.existsById("1")).thenReturn(false);
+
+        Mockito.when(bookRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        BookEntity entity = new BookEntity();
+        entity.setBookId("1");
+        entity.setAvailableCopies(2);
+        entity.setTotalCopies(2);
+
+        Mockito.when(bookRepository.findById("1")).thenReturn(java.util.Optional.of(entity));
 
         bookService.addBook(book, 2);
 

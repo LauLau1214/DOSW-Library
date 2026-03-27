@@ -1,93 +1,100 @@
 package edu.eci.dosw.DOSW_Library.core.service;
 
-
 import edu.eci.dosw.DOSW_Library.core.model.Book;
+import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
+import edu.eci.dosw.DOSW_Library.persistence.mapper.BookPersistenceMapper;
+import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class BookService {
 
-    private final Map<Book, Integer> books = new HashMap<Book, Integer>();
+    private final BookRepository bookRepository;
+
+    public BookService(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
 
     public void addBook(Book book, int copies) {
-        if(book == null || copies <= 0){
-            throw new RuntimeException("Datos invalidos");
+        if (book == null || copies <= 0) {
+            throw new RuntimeException("Datos inválidos");
         }
 
-        Optional<Book> existingBook = books.keySet()
-                .stream()
-                .filter(b -> b.getId().equals(book.getId()))
-                .findFirst();
-
-        if(existingBook.isPresent()){
-            Book b = existingBook.get();
-            books.put(b, books.get(b) + copies);
+        if (bookRepository.existsById(book.getId())) {
+            BookEntity existing = bookRepository.findById(book.getId()).get();
+            existing.setTotalCopies(existing.getTotalCopies() + copies);
+            existing.setAvailableCopies(existing.getAvailableCopies() + copies);
+            bookRepository.save(existing);
         } else {
-            books.put(book, copies);
+            BookEntity entity = BookPersistenceMapper.toEntity(book, copies, copies);
+            bookRepository.save(entity);
         }
     }
 
     public List<Book> getAllBooks() {
-        return books.keySet()
+        return bookRepository.findAll()
                 .stream()
+                .map(BookPersistenceMapper::toModel)
                 .collect(Collectors.toList());
     }
 
-    public Book getBookById(String id){
-        return books.keySet()
-                .stream()
-                .filter(n -> n.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Libro no encontrado"));
+    public Book getBookById(String id) {
+        return bookRepository.findById(id)
+                .map(BookPersistenceMapper::toModel)
+                .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
     }
 
     public void updateBookAvailability(String id, boolean available) {
-        Book book = getBookById(id);
-
-        if(!available){
-            books.put(book, 0);
+        BookEntity entity = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
+        entity.setAvailable(available);
+        if (!available) {
+            entity.setAvailableCopies(0);
         } else {
-            books.put(book, Math.max(1, books.get(book)));
+            entity.setAvailableCopies(Math.max(1, entity.getAvailableCopies()));
         }
+        bookRepository.save(entity);
     }
 
-    public boolean isAvailable(String id){
-        Book book = getBookById(id);
-        return books.get(book) > 0;
-    }
-
-    public int getCopies(String id){
-        Book book = getBookById(id);
-        return books.get(book);
-    }
-
-    public void updateCopies(String id, int copies) {
-        Book book = getBookById(id);
-        books.put(book, copies);
-    }
-
-    public void removeBook(String id) {
-        Book book = getBookById(id);
-        books.remove(book);
+    public boolean isAvailable(String id) {
+        BookEntity entity = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
+        return entity.getAvailableCopies() > 0;
     }
 
     public void decreaseStock(String id) {
-        Book book = getBookById(id);
-
-        books.computeIfPresent(book, (b, stock) -> {
-            if (stock <= 0) {
-                throw new RuntimeException("No hay stock disponible");
-            }
-            return stock - 1;
-        });
+        BookEntity entity = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
+        if (entity.getAvailableCopies() <= 0) {
+            throw new RuntimeException("No hay stock disponible");
+        }
+        entity.setAvailableCopies(entity.getAvailableCopies() - 1);
+        bookRepository.save(entity);
     }
 
     public void increaseStock(String id) {
-        Book book = getBookById(id);
+        BookEntity entity = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
 
-        books.computeIfPresent(book, (b, stock) -> stock + 1);
+        if (entity.getAvailableCopies() < entity.getTotalCopies()) {
+            entity.setAvailableCopies(entity.getAvailableCopies() + 1);
+            bookRepository.save(entity);
+        }
+    }
+
+    public void removeBook(String id) {
+        if (!bookRepository.existsById(id)) {
+            throw new RuntimeException("Libro no encontrado: " + id);
+        }
+        bookRepository.deleteById(id);
+    }
+
+    public int getCopies(String id) {
+        BookEntity entity = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
+        return entity.getAvailableCopies();
     }
 }

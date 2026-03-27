@@ -3,24 +3,34 @@ package edu.eci.dosw.DOSW_Library;
 import edu.eci.dosw.DOSW_Library.core.exception.UserNotFoundException;
 import edu.eci.dosw.DOSW_Library.core.model.*;
 import edu.eci.dosw.DOSW_Library.core.service.*;
+import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
+import edu.eci.dosw.DOSW_Library.persistence.repository.LoanRepository;
+import edu.eci.dosw.DOSW_Library.persistence.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 public class LoanServiceTest {
 
     private BookService bookService;
     private UserService userService;
     private LoanService loanService;
+    private BookRepository bookRepository;
+    private LoanRepository loanRepository;
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
-        bookService = new BookService();
-        userService = new UserService();
-        loanService = new LoanService(bookService, userService);
+        bookRepository = mock(BookRepository.class);
+        userRepository = mock(UserRepository.class);
+        loanRepository = mock(LoanRepository.class);
+        bookService = new BookService(bookRepository);
+        userService = new UserService(userRepository);
+        loanService = new LoanService(loanRepository, bookRepository, userRepository, bookService);
     }
 
     @Test

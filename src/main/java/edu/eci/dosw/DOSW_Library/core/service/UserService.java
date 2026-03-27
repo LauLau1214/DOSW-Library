@@ -1,43 +1,61 @@
 package edu.eci.dosw.DOSW_Library.core.service;
 
-
 import edu.eci.dosw.DOSW_Library.core.exception.UserNotFoundException;
 import edu.eci.dosw.DOSW_Library.core.model.User;
+import edu.eci.dosw.DOSW_Library.persistence.entity.UserEntity;
+import edu.eci.dosw.DOSW_Library.persistence.mapper.UserPersistenceMapper;
+import edu.eci.dosw.DOSW_Library.persistence.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final List<User> users = new ArrayList<User>();
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public void registerUser(User user) {
-        if (user == null){
-            throw new RuntimeException("Usuario invalido");
+        if (user == null) {
+            throw new RuntimeException("Usuario inválido");
         }
-        users.add(user);
+        // Encriptar contraseña antes de guardar
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        UserEntity entity = UserPersistenceMapper.toEntity(user);
+        userRepository.save(entity);
     }
 
     public List<User> getAllUsers() {
-        return users;
+        return userRepository.findAll()
+                .stream()
+                .map(UserPersistenceMapper::toModel)
+                .collect(Collectors.toList());
     }
 
     public User getUserById(String id) throws UserNotFoundException {
-        return users.stream()
-                .filter(u -> u.getId().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con id: " + id));
+        return userRepository.findById(id)
+                .map(UserPersistenceMapper::toModel)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + id));
     }
 
     public void updateUser(String id, User updatedUser) throws UserNotFoundException {
-        User user = getUserById(id);
-        user.setName(updatedUser.getName());
+        UserEntity entity = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + id));
+        entity.setName(updatedUser.getName());
+        userRepository.save(entity);
     }
 
     public void deleteUser(String id) throws UserNotFoundException {
-        User user = getUserById(id);
-        users.remove(user);
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException("Usuario no encontrado: " + id);
+        }
+        userRepository.deleteById(id);
     }
 }

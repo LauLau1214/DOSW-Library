@@ -56,3 +56,11 @@ Loan contiene referencias a Book y User, y usa el enum Status
 para controlar el estado del préstamo.
 
 ![Diagrama de Clases](evidencias/diagramaClases.png)
+
+
+
+# Parte 3
+
+### Diagrama no relacional
+
+![Diagrama no relacional](evidencias/diagrama.png)

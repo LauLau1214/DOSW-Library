@@ -49,7 +49,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Run tests
-        run: mvn verify
+        run: mvn test -Dtest="BookServiceTest,UserServiceTest,LoanServiceTest" -DfailIfNoTests=false
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

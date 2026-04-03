@@ -64,3 +64,4 @@ para controlar el estado del préstamo.
 ### Diagrama no relacional
 
 ![Diagrama no relacional](evidencias/diagrama.png)
+

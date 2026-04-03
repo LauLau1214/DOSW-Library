@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "loans")
@@ -20,7 +21,7 @@ public class LoanEntity {
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
-    private BookEntity bookId;
+    private BookEntity book;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -35,5 +36,7 @@ public class LoanEntity {
     @Column(name = "return_date")
     private LocalDate returnDate;
 
-
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "loan_id")
+    private List<LoanHistoryEntity> history;
 }

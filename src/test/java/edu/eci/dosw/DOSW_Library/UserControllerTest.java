@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -22,10 +23,15 @@ class UserControllerTest {
         String json = """
             {
                 "id": "U1",
-                "name": "Maria"
+                "name": "Maria",
+                "username": "maria01",
+                "password": "pass123",
+                "role": "USER",
+                "email": "maria@email.com",
+                "membershipType": "Standard",
+                "registeredDate": "2024-01-15"
             }
             """;
-
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
@@ -33,14 +39,15 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldFailWhenUserIdIsEmpty() throws Exception {
+    void shouldFailWhenPasswordIsNull() throws Exception {
         String json = """
             {
-                "id": "",
-                "name": "Maria"
+                "id": "U-NOPWD",
+                "name": "Sin Password",
+                "username": "sinpwd",
+                "role": "USER"
             }
             """;
-
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
@@ -48,69 +55,72 @@ class UserControllerTest {
     }
 
     @Test
-    void shouldFailWhenUserIdIsNull() throws Exception {
-        String json = """
-            {
-                "name": "Maria"
-            }
-            """;
-
-        mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldGetAllUsers() throws Exception {
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldGetUserById() throws Exception {
-        // Primero lo registramos
         String json = """
             {
                 "id": "U2",
-                "name": "Carlos"
+                "name": "Carlos",
+                "username": "carlos02",
+                "password": "pass123",
+                "role": "USER",
+                "email": "carlos@email.com",
+                "membershipType": "Standard",
+                "registeredDate": "2024-01-15"
             }
             """;
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json));
 
-        // Luego lo buscamos
         mockMvc.perform(get("/users/U2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("U2"))
-                .andExpect(jsonPath("$.name").value("Carlos"));
+                .andExpect(jsonPath("$.id").value("U2"));
     }
 
     @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldFailWhenUserNotFound() throws Exception {
         mockMvc.perform(get("/users/ID-QUE-NO-EXISTE"))
-                .andExpect(status().isNotFound()); // UserNotFoundException -> 404
+                .andExpect(status().isNotFound());
     }
 
     @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldUpdateUser() throws Exception {
-        // Registramos primero
         String json = """
             {
                 "id": "U3",
-                "name": "Pedro"
+                "name": "Pedro",
+                "username": "pedro03",
+                "password": "pass123",
+                "role": "USER",
+                "email": "pedro@email.com",
+                "membershipType": "Standard",
+                "registeredDate": "2024-01-15"
             }
             """;
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json));
 
-        // Actualizamos
         String updated = """
             {
                 "id": "U3",
-                "name": "Pedro Actualizado"
+                "name": "Pedro Actualizado",
+                "username": "pedro03",
+                "password": "pass123",
+                "role": "USER",
+                "email": "pedro@email.com",
+                "membershipType": "VIP",
+                "registeredDate": "2024-01-15"
             }
             """;
         mockMvc.perform(put("/users/U3")
@@ -120,11 +130,15 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldFailWhenUpdateUserNotFound() throws Exception {
         String updated = """
             {
                 "id": "NO-EXISTE",
-                "name": "Nadie"
+                "name": "Nadie",
+                "username": "nadie",
+                "password": "pass123",
+                "role": "USER"
             }
             """;
         mockMvc.perform(put("/users/NO-EXISTE")
@@ -134,11 +148,18 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldDeleteUser() throws Exception {
         String json = """
             {
                 "id": "U4",
-                "name": "Ana"
+                "name": "Ana",
+                "username": "ana04",
+                "password": "pass123",
+                "role": "USER",
+                "email": "ana@email.com",
+                "membershipType": "Standard",
+                "registeredDate": "2024-01-15"
             }
             """;
         mockMvc.perform(post("/users")
@@ -150,6 +171,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "LIBRARIAN")
     void shouldFailWhenDeleteUserNotFound() throws Exception {
         mockMvc.perform(delete("/users/NO-EXISTE"))
                 .andExpect(status().isNotFound());

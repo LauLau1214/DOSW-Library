@@ -15,7 +15,7 @@ import java.util.Map;
 public class JwtService {
 
     // Clave secreta para firmar el token — debe ser larga
-    private static final String SECRET_KEY = "dosw-library-secret-key-2024-very-long-string";
+    private static final String SECRET_KEY = "dosw-library-secret-key-2024-very-long-string-needs-to-be-256-bits-minimum";
     // Tiempo de expiración: 24 horas en milisegundos
     private static final long EXPIRATION_TIME = 86400000;
 

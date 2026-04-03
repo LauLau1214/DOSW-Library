@@ -6,102 +6,160 @@ import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
 import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
 
-    private BookService bookService;
+    @Mock
     private BookRepository bookRepository;
+
+    @InjectMocks
+    private BookService bookService;
+
+    private Book book;
+    private BookEntity bookEntity;
 
     @BeforeEach
     void setUp() {
-        bookRepository = Mockito.mock(BookRepository.class);
-        bookService = new BookService(bookRepository);
+        book = new Book();
+        book.setId("book-001");
+        book.setTitle("Clean Code");
+        book.setAuthor("Robert C. Martin");
+
+        bookEntity = new BookEntity();
+        bookEntity.setBookId("book-001");
+        bookEntity.setTitle("Clean Code");
+        bookEntity.setAuthor("Robert C. Martin");
+        bookEntity.setAvailableCopies(3);
+        bookEntity.setTotalCopies(3);
+        bookEntity.setBorrowedCopies(0);
+        bookEntity.setStatus("AVAILABLE");
     }
 
     @Test
-    void shouldAddBook() {
-        Book book = new Book("Libro", "Autor", "1", true);
+    void addBook_nuevo_exitoso() {
+        when(bookRepository.existsById("book-001")).thenReturn(false);
+        when(bookRepository.save(any())).thenReturn(bookEntity);
 
-        Mockito.when(bookRepository.existsById("1")).thenReturn(false);
+        bookService.addBook(book, 3);
 
-        Mockito.when(bookRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
+        verify(bookRepository, times(1)).save(any());
+    }
 
-        BookEntity entity = new BookEntity();
-        entity.setBookId("1");
-        entity.setAvailableCopies(2);
-        entity.setTotalCopies(2);
-
-        Mockito.when(bookRepository.findById("1")).thenReturn(java.util.Optional.of(entity));
+    @Test
+    void addBook_existente_sumaCopias() {
+        when(bookRepository.existsById("book-001")).thenReturn(true);
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
+        when(bookRepository.save(any())).thenReturn(bookEntity);
 
         bookService.addBook(book, 2);
 
-        assertEquals(2, bookService.getCopies("1"));
+        verify(bookRepository, times(1)).save(any());
+        assertEquals(5, bookEntity.getTotalCopies());
     }
 
     @Test
-    void shouldFailIfInvalidBook() {
-        assertThrows(RuntimeException.class, () -> {
-            bookService.addBook(null, 1);
-        });
+    void addBook_libroNulo_lanzaExcepcion() {
+        assertThrows(RuntimeException.class, () ->
+                bookService.addBook(null, 1)
+        );
     }
 
     @Test
-    void shouldDecreaseStock() {
-        Book book = new Book("Libro", "Autor", "1", true);
-
-        bookService.addBook(book, 2);
-        bookService.decreaseStock("1");
-
-        assertEquals(1, bookService.getCopies("1"));
+    void addBook_copiasEnCero_lanzaExcepcion() {
+        assertThrows(RuntimeException.class, () ->
+                bookService.addBook(book, 0)
+        );
     }
 
     @Test
-    void shouldFailIfNoStock() {
-        Book book = new Book("Libro", "Autor", "1", true);
+    void getBookById_existente_retornaLibro() {
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
 
-        bookService.addBook(book, 1);
-        bookService.decreaseStock("1");
+        Book result = bookService.getBookById("book-001");
 
-        assertThrows(RuntimeException.class, () -> {
-            bookService.decreaseStock("1");
-        });
+        assertNotNull(result);
+        assertEquals("book-001", result.getId());
     }
 
     @Test
-    void shouldFailWhenBookIsNull() {
-        assertThrows(RuntimeException.class, () -> {
-            bookService.addBook(null, 5);
-        });
+    void getBookById_noExiste_lanzaExcepcion() {
+        when(bookRepository.findById("book-999")).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () ->
+                bookService.getBookById("book-999")
+        );
     }
 
     @Test
-    void shouldFailWhenCopiesZero() {
-        Book book = new Book("A", "B", "1", true);
+    void decreaseStock_exitoso() {
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
 
-        assertThrows(RuntimeException.class, () -> {
-            bookService.addBook(book, 0);
-        });
+        bookService.decreaseStock("book-001");
+
+        assertEquals(2, bookEntity.getAvailableCopies());
+        assertEquals(1, bookEntity.getBorrowedCopies());
+        verify(bookRepository, times(1)).save(bookEntity);
     }
 
     @Test
-    void shouldFailWhenBookNotFound() {
-        assertThrows(RuntimeException.class, () -> {
-            bookService.getBookById("999");
-        });
+    void decreaseStock_sinStock_lanzaExcepcion() {
+        bookEntity.setAvailableCopies(0);
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
+
+        assertThrows(RuntimeException.class, () ->
+                bookService.decreaseStock("book-001")
+        );
     }
 
     @Test
-    void shouldFailWhenNoStock() {
-        Book book = new Book("A", "B", "1", true);
-        bookService.addBook(book, 1);
+    void increaseStock_exitoso() {
+        bookEntity.setAvailableCopies(2);
+        bookEntity.setBorrowedCopies(1);
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
 
-        bookService.decreaseStock("1");
+        bookService.increaseStock("book-001");
 
-        assertThrows(RuntimeException.class, () -> {
-            bookService.decreaseStock("1");
-        });
+        assertEquals(3, bookEntity.getAvailableCopies());
+        verify(bookRepository, times(1)).save(bookEntity);
+    }
+
+    @Test
+    void getAllBooks_retornaLista() {
+        when(bookRepository.findAll()).thenReturn(List.of(bookEntity));
+
+        var result = bookService.getAllBooks();
+
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void removeBook_exitoso() {
+        when(bookRepository.existsById("book-001")).thenReturn(true);
+
+        bookService.removeBook("book-001");
+
+        verify(bookRepository, times(1)).deleteById("book-001");
+    }
+
+    @Test
+    void removeBook_noExiste_lanzaExcepcion() {
+        when(bookRepository.existsById("book-999")).thenReturn(false);
+
+        assertThrows(RuntimeException.class, () ->
+                bookService.removeBook("book-999")
+        );
     }
 }

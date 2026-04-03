@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface LoanRepository extends JpaRepository<LoanEntity, String> {
 
-    List<LoanEntity> findByUserId(String userId);
+    List<LoanEntity> findByUserUserId(String userId);
 
     List<LoanEntity> findByBookBookId(String bookId);
 }

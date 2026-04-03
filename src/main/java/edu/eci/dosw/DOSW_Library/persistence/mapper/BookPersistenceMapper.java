@@ -5,23 +5,43 @@ import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
 
 public class BookPersistenceMapper {
 
-    public static Book toModel(BookEntity bookEntity) {
+    public static Book toModel(BookEntity e) {
         Book book = new Book();
-        book.setId(bookEntity.getBookId());
-        book.setTitle(bookEntity.getTitle());
-        book.setAuthor(bookEntity.getAuthor());
-        book.setAvailable(bookEntity.getAvailableCopies() > 0);
+        book.setId(e.getBookId());
+        book.setTitle(e.getTitle());
+        book.setAuthor(e.getAuthor());
+        book.setIsbn(e.getIsbn());
+        book.setPublicationType(e.getPublicationType());
+        book.setPublicationDate(e.getPublicationDate());
+        book.setCategories(e.getCategories());
+        book.setPages(e.getPages());
+        book.setLanguage(e.getLanguage());
+        book.setPublisher(e.getPublisher());
+        book.setStatus(e.getStatus());
+        book.setTotalCopies(e.getTotalCopies());
+        book.setAvailableCopies(e.getAvailableCopies());
+        book.setBorrowedCopies(e.getBorrowedCopies());
+        book.setAddedToCatalogDate(e.getAddedToCatalogDate());
         return book;
     }
 
-    public static BookEntity toEntity(Book book, int totalCopies, int availableCopies) {
-        BookEntity bookEntity = new BookEntity();
-        bookEntity.setBookId(book.getId());
-        bookEntity.setTitle(book.getTitle());
-        bookEntity.setAuthor(book.getAuthor());
-        bookEntity.setAvailable(availableCopies > 0);
-        bookEntity.setTotalCopies(totalCopies);
-        bookEntity.setAvailableCopies(availableCopies);
-        return bookEntity;
+    public static BookEntity toEntity(Book book) {
+        BookEntity e = new BookEntity();
+        e.setBookId(book.getId());
+        e.setTitle(book.getTitle());
+        e.setAuthor(book.getAuthor());
+        e.setIsbn(book.getIsbn());
+        e.setPublicationType(book.getPublicationType());
+        e.setPublicationDate(book.getPublicationDate());
+        e.setCategories(book.getCategories());
+        e.setPages(book.getPages());
+        e.setLanguage(book.getLanguage());
+        e.setPublisher(book.getPublisher());
+        e.setStatus(book.getStatus());
+        e.setTotalCopies(book.getTotalCopies());
+        e.setAvailableCopies(book.getAvailableCopies());
+        e.setBorrowedCopies(book.getBorrowedCopies());
+        e.setAddedToCatalogDate(book.getAddedToCatalogDate());
+        return e;
     }
 }

@@ -9,7 +9,7 @@ public class LoanPersistenceMapper {
     public static Loan toModel(LoanEntity loanEntity) {
         Loan loan = new Loan();
         loan.setId(loanEntity.getLoanId());
-        loan.setBook(BookPersistenceMapper.toModel(loanEntity.getBookId()));
+        loan.setBook(BookPersistenceMapper.toModel(loanEntity.getBook()));
         loan.setUser(UserPersistenceMapper.toModel(loanEntity.getUser()));
         loan.setLoanDate(loanEntity.getLoanDate());
         loan.setStatus(Status.valueOf(loanEntity.getStatus()));

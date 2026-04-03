@@ -28,17 +28,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Extraer el header Authorization
         String authHeader = request.getHeader("Authorization");
+        System.out.println(">>> Authorization header: " + authHeader); // log temporal
 
-        // Si no tiene token, continúa sin autenticar
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Extraer el token quitando "Bearer "
         String token = authHeader.substring(7);
+        System.out.println(">>> Token extraído: " + token); // log temporal
+        System.out.println(">>> Token válido: " + jwtService.isTokenValid(token)); // log temporal
+
+        if (!jwtService.isTokenValid(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token inválido o expirado");
+            return;
+        }
+
 
         // Validar el token
         if (!jwtService.isTokenValid(token)) {

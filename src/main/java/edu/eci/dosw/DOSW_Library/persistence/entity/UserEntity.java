@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -22,6 +24,15 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "membership_type", nullable = false)
+    private String membershipType; // VIP, Platinum, Standard
+
+    @Column(name = "registered_date")
+    private LocalDate registeredDate;
 
     @Column(nullable = false, unique = true)
     private String username;

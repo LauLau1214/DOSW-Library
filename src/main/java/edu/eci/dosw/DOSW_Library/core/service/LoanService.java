@@ -53,7 +53,7 @@ public class LoanService {
 
         LoanEntity loanEntity = new LoanEntity();
         loanEntity.setLoanId(UUID.randomUUID().toString());
-        loanEntity.setBookId(bookEntity);
+        loanEntity.setBook(bookEntity);
         loanEntity.setUser(userEntity);
         loanEntity.setLoanDate(LocalDate.now());
         loanEntity.setStatus(Status.ACTIVE.name());
@@ -75,7 +75,7 @@ public class LoanService {
         loanEntity.setReturnDate(LocalDate.now());
         loanRepository.save(loanEntity);
 
-        bookService.increaseStock(loanEntity.getBookId().getBookId());
+        bookService.increaseStock(loanEntity.getBook().getBookId());
 
         return LoanPersistenceMapper.toModel(loanEntity);
     }
@@ -88,7 +88,7 @@ public class LoanService {
     }
 
     public List<Loan> getLoansByUserId(String userId) {
-        return loanRepository.findByUserId(userId)
+        return loanRepository.findByUserUserId((userId))
                 .stream()
                 .map(LoanPersistenceMapper::toModel)
                 .collect(Collectors.toList());

@@ -2,6 +2,7 @@ package edu.eci.dosw.DOSW_Library.controller;
 
 
 import edu.eci.dosw.DOSW_Library.controller.dto.BookDTO;
+import edu.eci.dosw.DOSW_Library.controller.mapper.BookMapper;
 import edu.eci.dosw.DOSW_Library.core.model.Book;
 import edu.eci.dosw.DOSW_Library.core.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +34,7 @@ public class BookController {
 
     @PostMapping
     public ResponseEntity<Void> addBook(@RequestBody BookDTO bookDTO) {
-        Book book = new Book(bookDTO.getTitle(), bookDTO.getAuthor(), bookDTO.getId(), true);
+        Book book = BookMapper.toModel(bookDTO);
         bookService.addBook(book, bookDTO.getCopies());
         return ResponseEntity.status(201).build();
     }

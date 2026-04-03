@@ -29,7 +29,12 @@ public class BookService {
             existing.setAvailableCopies(existing.getAvailableCopies() + copies);
             bookRepository.save(existing);
         } else {
-            BookEntity entity = BookPersistenceMapper.toEntity(book, copies, copies);
+            // Seteamos las copias en el modelo antes de convertir a entidad
+            book.setTotalCopies(copies);
+            book.setAvailableCopies(copies);
+            book.setBorrowedCopies(0);
+            book.setStatus(copies > 0 ? "AVAILABLE" : "UNAVAILABLE");
+            BookEntity entity = BookPersistenceMapper.toEntity(book);
             bookRepository.save(entity);
         }
     }
@@ -50,10 +55,13 @@ public class BookService {
     public void updateBookAvailability(String id, boolean available) {
         BookEntity entity = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
-        entity.setAvailable(available);
+
+        // Ya no existe setAvailable(), ahora se maneja con status y availableCopies
         if (!available) {
+            entity.setStatus("UNAVAILABLE");
             entity.setAvailableCopies(0);
         } else {
+            entity.setStatus("AVAILABLE");
             entity.setAvailableCopies(Math.max(1, entity.getAvailableCopies()));
         }
         bookRepository.save(entity);
@@ -72,15 +80,20 @@ public class BookService {
             throw new RuntimeException("No hay stock disponible");
         }
         entity.setAvailableCopies(entity.getAvailableCopies() - 1);
+        entity.setBorrowedCopies(entity.getBorrowedCopies() + 1);
+        if (entity.getAvailableCopies() == 0) {
+            entity.setStatus("UNAVAILABLE");
+        }
         bookRepository.save(entity);
     }
 
     public void increaseStock(String id) {
         BookEntity entity = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + id));
-
         if (entity.getAvailableCopies() < entity.getTotalCopies()) {
             entity.setAvailableCopies(entity.getAvailableCopies() + 1);
+            entity.setBorrowedCopies(Math.max(0, entity.getBorrowedCopies() - 1));
+            entity.setStatus("AVAILABLE");
             bookRepository.save(entity);
         }
     }

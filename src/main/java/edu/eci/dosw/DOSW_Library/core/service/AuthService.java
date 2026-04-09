@@ -1,8 +1,8 @@
 package edu.eci.dosw.DOSW_Library.core.service;
 
+import edu.eci.dosw.DOSW_Library.core.model.User;
 import edu.eci.dosw.DOSW_Library.core.security.JwtService;
-import edu.eci.dosw.DOSW_Library.persistence.entity.UserEntity;
-import edu.eci.dosw.DOSW_Library.persistence.repository.UserRepository;
+import edu.eci.dosw.DOSW_Library.persistence.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +22,11 @@ public class AuthService {
     }
 
     public String login(String username, String password) {
-        // Buscar usuario por username
-        UserEntity user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        // Verificar contraseña
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
-
-        // Generar y retornar token JWT
-        return jwtService.generateToken(user.getUserId(), user.getRole());
+        return jwtService.generateToken(user.getId(), user.getRole());
     }
 }

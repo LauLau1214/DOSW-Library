@@ -8,10 +8,12 @@ import edu.eci.dosw.DOSW_Library.core.model.Loan;
 import edu.eci.dosw.DOSW_Library.core.service.LoanService;
 import edu.eci.dosw.DOSW_Library.core.validator.LoanValidator;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,10 +60,19 @@ public class LoanController {
         return ResponseEntity.ok(LoanMapper.toDTO(loan));
     }
 
-    @Operation(summary = "Obtener todos los préstamos")
+    @Operation(summary = "Obtener todos los préstamos - Solo LIBRARIAN")
     @ApiResponse(responseCode = "200", description = "Lista de préstamos")
     @GetMapping
     public ResponseEntity<List<Loan>> getAllLoans() {
         return ResponseEntity.ok(loanService.getAllLoans());
+    }
+
+    @Operation(summary = "Obtener préstamos de un usuario específico")
+    @ApiResponse(responseCode = "200", description = "Lista de préstamos del usuario")
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('LIBRARIAN') or #userId == authentication.name")
+    public ResponseEntity<List<Loan>> getLoansByUser(
+            @Parameter(description = "ID del usuario") @PathVariable String userId) {
+        return ResponseEntity.ok(loanService.getLoansByUser(userId));
     }
 }

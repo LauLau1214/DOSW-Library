@@ -6,10 +6,10 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @Configuration
 @EnableJpaRepositories(
-        basePackages = "edu.eci.dosw.DOSW_Library.persistence.repository"
+        basePackages = "edu.eci.dosw.DOSW_Library.persistence.relational.repository"
 )
 @EnableMongoRepositories(
-        basePackages = "edu.eci.dosw.DOSW_Library.persistence.mongorepository"
+        basePackages = "edu.eci.dosw.DOSW_Library.persistence.norelational.repository"
 )
 public class PersistenceConfig {
 }

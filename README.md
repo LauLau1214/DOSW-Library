@@ -12,6 +12,12 @@ Desde esta interfaz se pueden probar todos los endpoints directamente sin necesi
 ![Swagger UI](evidencias/swagger1.png)
 ![Swagger UI](evidencias/swagger2.png)
 
+Revision de endpoints
+
+![Swagger UI](evidencias/swagger3.png)
+![Swagger UI](evidencias/swagger4.png)
+![Swagger UI](evidencias/swagger5.png)
+
 ## Pruebas unitarias
 
 Se implementaron **47 pruebas** distribuidas en 6 clases de prueba, cubriendo tanto escenarios exitosos como escenarios de error para los tres módulos del sistema.
@@ -64,4 +70,8 @@ para controlar el estado del préstamo.
 ### Diagrama no relacional
 
 ![Diagrama no relacional](evidencias/diagrama.png)
+
+### Reto 8
+
+![Azure](evidencias/reto8.png)
 

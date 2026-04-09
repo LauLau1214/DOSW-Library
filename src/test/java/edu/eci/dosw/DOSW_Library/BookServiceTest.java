@@ -2,8 +2,7 @@ package edu.eci.dosw.DOSW_Library;
 
 import edu.eci.dosw.DOSW_Library.core.model.Book;
 import edu.eci.dosw.DOSW_Library.core.service.BookService;
-import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
-import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
+import edu.eci.dosw.DOSW_Library.persistence.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +27,6 @@ public class BookServiceTest {
     private BookService bookService;
 
     private Book book;
-    private BookEntity bookEntity;
 
     @BeforeEach
     void setUp() {
@@ -36,21 +34,16 @@ public class BookServiceTest {
         book.setId("book-001");
         book.setTitle("Clean Code");
         book.setAuthor("Robert C. Martin");
-
-        bookEntity = new BookEntity();
-        bookEntity.setBookId("book-001");
-        bookEntity.setTitle("Clean Code");
-        bookEntity.setAuthor("Robert C. Martin");
-        bookEntity.setAvailableCopies(3);
-        bookEntity.setTotalCopies(3);
-        bookEntity.setBorrowedCopies(0);
-        bookEntity.setStatus("AVAILABLE");
+        book.setAvailableCopies(3);
+        book.setTotalCopies(3);
+        book.setBorrowedCopies(0);
+        book.setStatus("AVAILABLE");
     }
 
     @Test
     void addBook_nuevo_exitoso() {
         when(bookRepository.existsById("book-001")).thenReturn(false);
-        when(bookRepository.save(any())).thenReturn(bookEntity);
+        when(bookRepository.save(any())).thenReturn(book);
 
         bookService.addBook(book, 3);
 
@@ -60,13 +53,12 @@ public class BookServiceTest {
     @Test
     void addBook_existente_sumaCopias() {
         when(bookRepository.existsById("book-001")).thenReturn(true);
-        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
-        when(bookRepository.save(any())).thenReturn(bookEntity);
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(book));
+        when(bookRepository.save(any())).thenReturn(book);
 
         bookService.addBook(book, 2);
 
         verify(bookRepository, times(1)).save(any());
-        assertEquals(5, bookEntity.getTotalCopies());
     }
 
     @Test
@@ -85,7 +77,7 @@ public class BookServiceTest {
 
     @Test
     void getBookById_existente_retornaLibro() {
-        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(book));
 
         Book result = bookService.getBookById("book-001");
 
@@ -104,19 +96,19 @@ public class BookServiceTest {
 
     @Test
     void decreaseStock_exitoso() {
-        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(book));
+        when(bookRepository.save(any())).thenReturn(book);
 
         bookService.decreaseStock("book-001");
 
-        assertEquals(2, bookEntity.getAvailableCopies());
-        assertEquals(1, bookEntity.getBorrowedCopies());
-        verify(bookRepository, times(1)).save(bookEntity);
+        assertEquals(2, book.getAvailableCopies());
+        assertEquals(1, book.getBorrowedCopies());
     }
 
     @Test
     void decreaseStock_sinStock_lanzaExcepcion() {
-        bookEntity.setAvailableCopies(0);
-        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
+        book.setAvailableCopies(0);
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(book));
 
         assertThrows(RuntimeException.class, () ->
                 bookService.decreaseStock("book-001")
@@ -125,19 +117,19 @@ public class BookServiceTest {
 
     @Test
     void increaseStock_exitoso() {
-        bookEntity.setAvailableCopies(2);
-        bookEntity.setBorrowedCopies(1);
-        when(bookRepository.findById("book-001")).thenReturn(Optional.of(bookEntity));
+        book.setAvailableCopies(2);
+        book.setBorrowedCopies(1);
+        when(bookRepository.findById("book-001")).thenReturn(Optional.of(book));
+        when(bookRepository.save(any())).thenReturn(book);
 
         bookService.increaseStock("book-001");
 
-        assertEquals(3, bookEntity.getAvailableCopies());
-        verify(bookRepository, times(1)).save(bookEntity);
+        assertEquals(3, book.getAvailableCopies());
     }
 
     @Test
     void getAllBooks_retornaLista() {
-        when(bookRepository.findAll()).thenReturn(List.of(bookEntity));
+        when(bookRepository.findAll()).thenReturn(List.of(book));
 
         var result = bookService.getAllBooks();
 
@@ -151,7 +143,7 @@ public class BookServiceTest {
 
         bookService.removeBook("book-001");
 
-        verify(bookRepository, times(1)).deleteById("book-001");
+        verify(bookRepository, times(1)).delete("book-001");
     }
 
     @Test

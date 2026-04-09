@@ -3,8 +3,7 @@ package edu.eci.dosw.DOSW_Library;
 import edu.eci.dosw.DOSW_Library.core.exception.UserNotFoundException;
 import edu.eci.dosw.DOSW_Library.core.model.User;
 import edu.eci.dosw.DOSW_Library.core.service.UserService;
-import edu.eci.dosw.DOSW_Library.persistence.entity.UserEntity;
-import edu.eci.dosw.DOSW_Library.persistence.repository.UserRepository;
+import edu.eci.dosw.DOSW_Library.persistence.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +32,6 @@ public class UserServiceTest {
     private UserService userService;
 
     private User user;
-    private UserEntity userEntity;
 
     @BeforeEach
     void setUp() {
@@ -44,20 +42,12 @@ public class UserServiceTest {
         user.setPassword("1234");
         user.setRole("USER");
         user.setEmail("laura@email.com");
-
-        userEntity = new UserEntity();
-        userEntity.setUserId("user-001");
-        userEntity.setName("Laura");
-        userEntity.setUsername("lvalentina");
-        userEntity.setPassword("encryptedPassword");
-        userEntity.setRole("USER");
-        userEntity.setEmail("laura@email.com");
     }
 
     @Test
     void registerUser_exitoso() {
         when(passwordEncoder.encode(any())).thenReturn("encryptedPassword");
-        when(userRepository.save(any())).thenReturn(userEntity);
+        when(userRepository.save(any())).thenReturn(user);
 
         userService.registerUser(user);
 
@@ -74,7 +64,7 @@ public class UserServiceTest {
 
     @Test
     void getUserById_exitoso() throws UserNotFoundException {
-        when(userRepository.findById("user-001")).thenReturn(Optional.of(userEntity));
+        when(userRepository.findById("user-001")).thenReturn(Optional.of(user));
 
         User result = userService.getUserById("user-001");
 
@@ -93,7 +83,7 @@ public class UserServiceTest {
 
     @Test
     void getAllUsers_retornaLista() {
-        when(userRepository.findAll()).thenReturn(List.of(userEntity));
+        when(userRepository.findAll()).thenReturn(List.of(user));
 
         var result = userService.getAllUsers();
 
@@ -107,7 +97,7 @@ public class UserServiceTest {
 
         userService.deleteUser("user-001");
 
-        verify(userRepository, times(1)).deleteById("user-001");
+        verify(userRepository, times(1)).delete("user-001");
     }
 
     @Test

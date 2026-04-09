@@ -31,35 +31,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitar CSRF (no aplica para APIs REST)
                 .csrf(csrf -> csrf.disable())
-                // Configurar CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // No usar sesiones — API stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Reglas de acceso
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos — no requieren token
+                        // Públicos
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // Solo LIBRARIAN puede gestionar libros (crear, editar, borrar)
+                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
+
+                        // Libros — LIBRARIAN gestiona, cualquier autenticado consulta
                         .requestMatchers(HttpMethod.POST, "/books").hasRole("LIBRARIAN")
                         .requestMatchers(HttpMethod.PUT, "/books/**").hasRole("LIBRARIAN")
                         .requestMatchers(HttpMethod.DELETE, "/books/**").hasRole("LIBRARIAN")
-                        // Cualquier autenticado puede ver libros
                         .requestMatchers(HttpMethod.GET, "/books/**").authenticated()
-                        // Solo LIBRARIAN puede gestionar usuarios
+
+                        // Usuarios — solo LIBRARIAN gestiona
                         .requestMatchers(HttpMethod.GET, "/users").hasRole("LIBRARIAN")
+                        .requestMatchers(HttpMethod.GET, "/users/**").hasRole("LIBRARIAN")
+                        .requestMatchers(HttpMethod.PUT, "/users/**").hasRole("LIBRARIAN")
                         .requestMatchers(HttpMethod.DELETE, "/users/**").hasRole("LIBRARIAN")
-                        // Registro de usuario es público
-                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
-                        // Préstamos — cualquier autenticado
-                        .requestMatchers("/loans/**").authenticated()
-                        // Cualquier otro endpoint requiere autenticación
+
+                        // Préstamos
+                        .requestMatchers(HttpMethod.GET, "/loans").hasRole("LIBRARIAN")
+                        .requestMatchers(HttpMethod.GET, "/loans/user/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/loans").hasAnyRole("LIBRARIAN", "USER")
+                        .requestMatchers(HttpMethod.PUT, "/loans/**").hasAnyRole("LIBRARIAN", "USER")
+
                         .anyRequest().authenticated()
                 )
-                // Agregar el filtro JWT antes del filtro de autenticación estándar
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

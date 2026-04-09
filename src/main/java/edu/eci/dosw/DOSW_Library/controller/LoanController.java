@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,10 +59,18 @@ public class LoanController {
         return ResponseEntity.ok(LoanMapper.toDTO(loan));
     }
 
-    @Operation(summary = "Obtener todos los préstamos")
+    @Operation(summary = "Obtener todos los préstamos - Solo LIBRARIAN")
     @ApiResponse(responseCode = "200", description = "Lista de préstamos")
     @GetMapping
     public ResponseEntity<List<Loan>> getAllLoans() {
         return ResponseEntity.ok(loanService.getAllLoans());
+    }
+
+    @Operation(summary = "Obtener préstamos de un usuario específico")
+    @ApiResponse(responseCode = "200", description = "Lista de préstamos del usuario")
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('LIBRARIAN') or #userId == authentication.name")
+    public ResponseEntity<List<Loan>> getLoansByUser(@PathVariable String userId) {
+        return ResponseEntity.ok(loanService.getLoansByUser(userId));
     }
 }

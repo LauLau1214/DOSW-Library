@@ -106,4 +106,8 @@ public class LoanService {
         loan.setStatus(Status.EXPIRED);
         loanRepository.save(loan);
     }
+
+    public List<Loan> getLoansByUser(String userId) {
+        return loanRepository.findByUserId(userId);
+    }
 }

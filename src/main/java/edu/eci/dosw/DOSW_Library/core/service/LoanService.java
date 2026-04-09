@@ -2,21 +2,18 @@ package edu.eci.dosw.DOSW_Library.core.service;
 
 import edu.eci.dosw.DOSW_Library.core.exception.BookNotAvailableException;
 import edu.eci.dosw.DOSW_Library.core.exception.UserNotFoundException;
+import edu.eci.dosw.DOSW_Library.core.model.Book;
 import edu.eci.dosw.DOSW_Library.core.model.Loan;
 import edu.eci.dosw.DOSW_Library.core.model.Status;
-import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
-import edu.eci.dosw.DOSW_Library.persistence.entity.LoanEntity;
-import edu.eci.dosw.DOSW_Library.persistence.entity.UserEntity;
-import edu.eci.dosw.DOSW_Library.persistence.mapper.LoanPersistenceMapper;
-import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
-import edu.eci.dosw.DOSW_Library.persistence.repository.LoanRepository;
-import edu.eci.dosw.DOSW_Library.persistence.repository.UserRepository;
+import edu.eci.dosw.DOSW_Library.core.model.User;
+import edu.eci.dosw.DOSW_Library.persistence.BookRepository;
+import edu.eci.dosw.DOSW_Library.persistence.LoanRepository;
+import edu.eci.dosw.DOSW_Library.persistence.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class LoanService {
@@ -39,76 +36,74 @@ public class LoanService {
     public Loan createLoan(String bookId, String userId)
             throws BookNotAvailableException, UserNotFoundException {
 
-        BookEntity bookEntity = bookRepository.findById(bookId)
+        Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Libro no encontrado: " + bookId));
 
-        UserEntity userEntity = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + userId));
 
-        if (bookEntity.getAvailableCopies() <= 0) {
+        if (book.getAvailableCopies() <= 0) {
             throw new BookNotAvailableException("El libro no está disponible: " + bookId);
         }
 
         bookService.decreaseStock(bookId);
 
-        LoanEntity loanEntity = new LoanEntity();
-        loanEntity.setLoanId(UUID.randomUUID().toString());
-        loanEntity.setBook(bookEntity);
-        loanEntity.setUser(userEntity);
-        loanEntity.setLoanDate(LocalDate.now());
-        loanEntity.setStatus(Status.ACTIVE.name());
-        loanEntity.setReturnDate(null);
+        Loan loan = new Loan();
+        loan.setId(UUID.randomUUID().toString());
+        loan.setBook(book);
+        loan.setUser(user);
+        loan.setLoanDate(LocalDate.now());
+        loan.setStatus(Status.ACTIVE);
+        loan.setReturnDate(null);
 
-        loanRepository.save(loanEntity);
-        return LoanPersistenceMapper.toModel(loanEntity);
+        return loanRepository.save(loan);
     }
 
     public Loan returnBook(String loanId) {
-        LoanEntity loanEntity = loanRepository.findById(loanId)
+
+        Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado: " + loanId));
 
-        if (loanEntity.getStatus().equals(Status.RETURNED.name())) {
+        if (loan.getStatus() == Status.RETURNED) {
             throw new RuntimeException("El libro ya fue devuelto");
         }
 
-        loanEntity.setStatus(Status.RETURNED.name());
-        loanEntity.setReturnDate(LocalDate.now());
-        loanRepository.save(loanEntity);
+        loan.setStatus(Status.RETURNED);
+        loan.setReturnDate(LocalDate.now());
 
-        bookService.increaseStock(loanEntity.getBook().getBookId());
+        loanRepository.save(loan);
 
-        return LoanPersistenceMapper.toModel(loanEntity);
+        bookService.increaseStock(loan.getBook().getId());
+
+        return loan;
     }
 
     public List<Loan> getAllLoans() {
-        return loanRepository.findAll()
-                .stream()
-                .map(LoanPersistenceMapper::toModel)
-                .collect(Collectors.toList());
+        return loanRepository.findAll();
     }
 
     public List<Loan> getLoansByUserId(String userId) {
-        return loanRepository.findByUserUserId((userId))
-                .stream()
-                .map(LoanPersistenceMapper::toModel)
-                .collect(Collectors.toList());
+
+        return loanRepository.findAll().stream()
+                .filter(loan -> loan.getUser().getId().equals(userId))
+                .toList();
     }
 
     public Loan getLoanById(String loanId) {
         return loanRepository.findById(loanId)
-                .map(LoanPersistenceMapper::toModel)
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado: " + loanId));
     }
 
     public void markAsExpired(String loanId) {
-        LoanEntity loanEntity = loanRepository.findById(loanId)
+
+        Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado: " + loanId));
 
-        if (loanEntity.getStatus().equals(Status.RETURNED.name())) {
+        if (loan.getStatus() == Status.RETURNED) {
             throw new RuntimeException("No se puede expirar un libro ya devuelto");
         }
 
-        loanEntity.setStatus(Status.EXPIRED.name());
-        loanRepository.save(loanEntity);
+        loan.setStatus(Status.EXPIRED);
+        loanRepository.save(loan);
     }
 }

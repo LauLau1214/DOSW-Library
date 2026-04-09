@@ -2,8 +2,8 @@ package edu.eci.dosw.DOSW_Library;
 
 import edu.eci.dosw.DOSW_Library.core.model.Book;
 import edu.eci.dosw.DOSW_Library.core.service.BookService;
-import edu.eci.dosw.DOSW_Library.persistence.entity.BookEntity;
-import edu.eci.dosw.DOSW_Library.persistence.repository.BookRepository;
+import edu.eci.dosw.DOSW_Library.persistence.relational.entity.BookEntity;
+import edu.eci.dosw.DOSW_Library.persistence.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

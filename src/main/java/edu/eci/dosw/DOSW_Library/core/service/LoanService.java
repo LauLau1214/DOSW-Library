@@ -48,9 +48,12 @@ public class LoanService {
 
         bookService.decreaseStock(bookId);
 
+        // Recargar book después de decreaseStock para tener el stock actualizado
+        Book updatedBook = bookRepository.findById(bookId).orElse(book);
+
         Loan loan = new Loan();
         loan.setId(UUID.randomUUID().toString());
-        loan.setBook(book);
+        loan.setBook(updatedBook);
         loan.setUser(user);
         loan.setLoanDate(LocalDate.now());
         loan.setStatus(Status.ACTIVE);
@@ -60,7 +63,6 @@ public class LoanService {
     }
 
     public Loan returnBook(String loanId) {
-
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado: " + loanId));
 
@@ -71,11 +73,10 @@ public class LoanService {
         loan.setStatus(Status.RETURNED);
         loan.setReturnDate(LocalDate.now());
 
-        loanRepository.save(loan);
-
+        // increaseStock antes de guardar para que el book dentro del loan tenga stock actualizado
         bookService.increaseStock(loan.getBook().getId());
 
-        return loan;
+        return loanRepository.save(loan);
     }
 
     public List<Loan> getAllLoans() {
@@ -83,9 +84,8 @@ public class LoanService {
     }
 
     public List<Loan> getLoansByUserId(String userId) {
-
         return loanRepository.findAll().stream()
-                .filter(loan -> loan.getUser().getId().equals(userId))
+                .filter(loan -> loan.getUser() != null && loan.getUser().getId().equals(userId))
                 .toList();
     }
 
@@ -95,7 +95,6 @@ public class LoanService {
     }
 
     public void markAsExpired(String loanId) {
-
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado: " + loanId));
 

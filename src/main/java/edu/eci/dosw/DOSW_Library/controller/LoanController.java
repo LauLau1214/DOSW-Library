@@ -8,6 +8,7 @@ import edu.eci.dosw.DOSW_Library.core.model.Loan;
 import edu.eci.dosw.DOSW_Library.core.service.LoanService;
 import edu.eci.dosw.DOSW_Library.core.validator.LoanValidator;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -70,7 +71,8 @@ public class LoanController {
     @ApiResponse(responseCode = "200", description = "Lista de préstamos del usuario")
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('LIBRARIAN') or #userId == authentication.name")
-    public ResponseEntity<List<Loan>> getLoansByUser(@PathVariable String userId) {
+    public ResponseEntity<List<Loan>> getLoansByUser(
+            @Parameter(description = "ID del usuario") @PathVariable String userId) {
         return ResponseEntity.ok(loanService.getLoansByUser(userId));
     }
 }
